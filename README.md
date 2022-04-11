@@ -6,15 +6,32 @@
 ## Configuration
 The default configuration is:
 
-```json
+```jsonc
 {
+  // Whether the extension is enabled or not.
   "mc-color.enabled": true,
+
+  // Marker type provides a few means of highlighting text.
   "mc-color.markerType": "foreground",
+
+  // Specfic languages to highlight on.
+  // You can also do "!language" to not tokenize just that language.
   "mc-color.languages": [
     "*"
   ],
+
+  // Delimiters are characters that are used to STOP tokenization.
+  // When the tokenizer hits these character it will not color any further
+  // no matter what.
   "mc-color.delimiters": [
     "`"
+  ],
+
+  // Prefixes are characters that will start tokenization. (§) is the
+  // default Minecraft token and (&) is used for many server tools.
+  "mc-color.prefixes": [
+    "§",
+    "&"
   ]
 }
 ```
@@ -37,11 +54,10 @@ EG:
 
 ![](https://media.discordapp.net/attachments/646099378242715668/957831747633049640/unknown.png)
 
-I was orginally thinking "Oh just check for `\n` or `\r\n`" but we realized if you used these in your code it would stop tokenization which might be annoying.
 
-So my fix was we implemented "delimiters" (can be configured in settings). The way it works is you can provide an array of 1 byte characters and if it hits one of those during tokenization it will stop.
+We also implemented "delimiters" (can be configured in settings). The way it works is you can provide an array of 1 byte characters and if it hits one of those during tokenization it will stop.
 
-By default we have backtick set which will as shown in this screenshot stop tokenization without all the excess coloring occuring like shown above:
+By default we have backtick (`) set which will as shown in this screenshot stop tokenization without all the excess coloring occuring like shown above:
 
 ![](https://media.discordapp.net/attachments/920500198407565349/957841004134801448/unknown.png)
 

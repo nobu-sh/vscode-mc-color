@@ -6,6 +6,7 @@ export interface Config extends vscode.WorkspaceConfiguration {
 	enabled?: boolean,
 	langauges?: string[],
 	markerType?: MarkerType
+	prefixes?: string[]
 	delimiters?: string[]
 }
 
@@ -39,6 +40,11 @@ function isValidDocument(config: Config, { languageId }: vscode.TextDocument): b
 
 	// If not enabled dont continue further
 	if (!config?.enabled) {
+		return isValid
+	}
+
+	// If no prefixes
+	if (!config.prefixes?.length) {
 		return isValid
 	}
 

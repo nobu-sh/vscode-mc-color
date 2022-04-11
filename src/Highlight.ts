@@ -40,8 +40,8 @@ export class Highlight {
 
   public async updateRange(text: string, version: string): Promise<boolean | void> {
     try {
-      // Create new extract results
-      const results = extract(text, this.config)
+      // Create new extract results for every prefix
+      const results = this.config.prefixes!.map((p) => extract(text, this.config, p)).flat()
 
       // If version sum mismatch throw error and wait till next update
       const actualVersion = this.document?.version.toString()
@@ -157,17 +157,17 @@ const special = {
   'r': 'RESET'
 }
 
-function extract(text: string, config: Config): ExtractResult[] {
+function extract(text: string, config: Config, prefix: string): ExtractResult[] {
   const final: ExtractResult[] = []
   
   // Get all occurances of §
-  const points = indicesOf(text, '§')
+  const points = indicesOf(text, prefix)
 
   // For each indice of all §
   for (const point of points) {
 
     // Find the next delimiter. [§] and any defined in config count as delimiters.
-    const d = findNextDelimiter(text, point + 1, ['§', ...(config.delimiters ?? [])])
+    const d = findNextDelimiter(text, point + 1, [prefix, ...(config.delimiters ?? [])])
 
     // If its not reset then extend past formatting
     if (text[point + 1] !== 'r') {

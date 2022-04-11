@@ -2,7 +2,7 @@
   "name": "mc-color",
   "displayName": "Minecraft Color Highlighter",
   "description": "Highlight Minecraft colors in your editor",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "publisher": "Nobuwu",
   "main": "./dist/extension.js",
   "icon": "public/logo.png",
@@ -42,6 +42,14 @@
             "*"
           ],
           "description": "An array of language ids which should be highlighted by Color Highlight. \"*\" to trigger on any language; Prepend language id with \"!\" to exclude the language (i.e \"!typescript\", \"!javascript\").",
+          "type": "array"
+        },
+        "mc-color.prefixes": {
+          "default": [
+            "§",
+            "&"
+          ],
+          "description": "An array of characters that will be used to start tokenization. (§) is the default Minecraft symbol some server tools use (&) too.",
           "type": "array"
         },
         "mc-color.delimiters": {

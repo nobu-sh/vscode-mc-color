@@ -1,0 +1,95 @@
+--- Default Minecraft Support ---
+
+- Colors -
+
+§aGreen§r
+§bBlue§r
+§cRed§r
+§dPurpur§r
+§eYellow§r
+§fWhite§r
+§gYellowish§r
+
+§0Black§r
+§1Blue§r
+§2Green§r
+§3Aqua§r
+§4Red§r
+§5Purple§r
+§6Golden§r
+§7Greyish§r
+§8Grey§r
+§9Lavender§r
+
+§lBold§r
+§oItalic§r
+§l§oBold Italic§r
+
+§Invalid
+
+- Continous Colors -
+
+§aGreen§bBlue§cRed§dPurpur§eYellow§fWhite
+§gYellowish§r
+
+- Bolding/Italic -
+
+§l§aGreen§bBlue§cRed§dPurpur§eYellow§fWhite
+§gYellowish§r
+
+§o§aGreen§bBlue§cRed§dPurpur§eYellow§fWhite
+§gYellowish§r
+
+§l§o§aGreen§bBlue§cRed§dPurpur§eYellow§fWhite
+§gYellowish§r
+
+§o§l§aGreen§bBlue§cRed§dPurpur§eYellow§fWhite
+§gYellowish§r
+
+--- Custom Prefix Support ---
+
+- Colors -
+
+&aGreen&r
+&bBlue&r
+&cRed&r
+&dPurpur&r
+&eYellow&r
+&fWhite&r
+&gYellowish&r
+
+&0Black&r
+&1Blue&r
+&2Green&r
+&3Aqua&r
+&4Red&r
+&5Purple&r
+&6Golden&r
+&7Greyish&r
+&8Grey&r
+&9Lavender&r
+
+&lBold&r
+&oItalic&r
+&l&oBold Italic&r
+
+&Invalid
+
+- Continous Colors -
+
+&aGreen&bBlue&cRed&dPurpur&eYellow&fWhite
+&gYellowish&r
+
+- Bolding/Italic -
+
+&l&aGreen&bBlue&cRed&dPurpur&eYellow&fWhite
+&gYellowish&r
+
+&o&aGreen&bBlue&cRed&dPurpur&eYellow&fWhite
+&gYellowish&r
+
+&l&o&aGreen&bBlue&cRed&dPurpur&eYellow&fWhite
+&gYellowish&r
+
+&o&l&aGreen&bBlue&cRed&dPurpur&eYellow&fWhite
+&gYellowish&r

@@ -93,3 +93,8 @@
 
 &o&l&aGreen&bBlue&cRed&dPurpur&eYellow&fWhite
 &gYellowish&r
+
+--- Mixed Prefixes ---
+
+§o&l&aGree§n§bBlue&cRed§dP&urp&ur&eYello&w&fW§hite
+&gYellowi§sh&r

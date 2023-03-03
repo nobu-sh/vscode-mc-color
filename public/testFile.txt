@@ -24,6 +24,10 @@
 §lBold§r
 §oItalic§r
 §l§oBold Italic§r
+§nUnderline§r
+§mStrikethrough§r
+§n§mUnderline Strikethrough§r
+§l§o§n§mBold Italic Underline Strikethrough§r
 
 §Invalid
 

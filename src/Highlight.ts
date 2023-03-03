@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/naming-convention */
 import {
   workspace,
   window,
@@ -8,7 +7,7 @@ import {
 } from 'vscode'
 import { DecorMap } from './DecorMap'
 import { Config } from './extension'
-
+import { Colors, Special, SpecialUnion, SpecialValues } from './Constants'
 
 export class Highlight {
   public disposed = false
@@ -41,7 +40,15 @@ export class Highlight {
   public async updateRange(text: string, version: string): Promise<boolean | void> {
     try {
       // Create new extract results for every prefix
-      const results = extract(text, this.config)
+      // merges instances of underline and strikethrough into one hidden
+      // style type because they both need to utilize the same css
+      // variable
+      const results = mergeTypes(
+        extract(text, this.config),
+        'HIDDEN_UNDERLINE_STRIKETHROUGH',
+        'UNDERLINE',
+        'STRIKETHROUGH'
+      )
 
       // If version sum mismatch throw error and wait till next update
       const actualVersion = this.document?.version.toString()
@@ -115,6 +122,47 @@ interface ExtractResult {
   color: string
 }
 
+// This method is a bit messy but tbh I don't really care, it works
+function mergeTypes(result: ExtractResult[], to: SpecialUnion, ...types: SpecialUnion[]): ExtractResult[] {
+  // Groups all results by the ending index
+  const endIndexGroup = result.reduce((c: Record<number, ExtractResult[]>, i: ExtractResult) => {
+    if (!c[i.end]) {
+      c[i.end] = []
+    }
+
+    c[i.end].push(i)
+
+    return c
+  }, {})
+
+  Object.entries(endIndexGroup).forEach(([i, v]) => {
+    // If less than two elements return
+    if (v.length < 2) {
+      return
+    }
+
+    // Grab the first occuring sample of each type
+    const samples = types.map((t) =>
+      v.filter((i) => i.color === t)
+        .sort((a, b) => a.start - b.start)[0]
+    ).filter((t) => t)
+
+    // If there are less samples then types return
+    if (samples.length < types.length) {
+      return
+    }
+
+    // Get the last occurring instance.
+    const start = samples.sort((a, b) => b.start - a.start)[0]
+
+    // Convert that instance to what we want.
+    start.color = to
+  })
+
+  // Gets all the values from grouped list and flattens into one array
+  return Object.values(endIndexGroup).flat()
+}
+
 // Converts array of extract results into object formatted like so:
 // {
 //   "hex_color": ExtractResult[]
@@ -131,43 +179,30 @@ function groupByColor(result: ExtractResult[]): Record<string, ExtractResult[]> 
   }, {})
 }
 
-const colors = {
-  '0': '#000000',
-  '1': '#0000aa',
-  '2': '#00aa00',
-  '3': '#00aaaa',
-  '4': '#aa0000',
-  '5': '#aa00aa',
-  '6': '#ffaa00',
-  '7': '#aaaaaa',
-  '8': '#555555',
-  '9': '#5555ff',
-  'a': '#55ff55',
-  'b': '#55ffff',
-  'c': '#ff5555',
-  'd': '#ff55ff',
-  'e': '#ffff55',
-  'f': '#ffffff',
-  'g': '#ddd605',
-}
-
-const special = {
-  'l': 'BOLD',
-  'o': 'ITALIC',
-  'r': 'RESET'
-}
-
 function extract(text: string, config: Config): ExtractResult[] {
   const final: ExtractResult[] = []
   
   // Get all occurances of §
-  const points = indicesOf(text, config.prefixes!)
+  const points = indicesOf(text, config.prefixes ?? [])
+  if (!points.length) {
+    return final
+  }
+
+  // Create delimiters
+  const delimiters = [
+    ...(config.prefixes ?? []),
+    ...(config.delimiters ?? [])
+  ]
+
+  if (config.newLineDelimiter) {
+    delimiters.push('\n')
+  }
 
   // For each indice of all §
   for (const point of points) {
-
     // Find the next delimiter. [§] and any defined in config count as delimiters.
-    const d = findNextDelimiter(text, point + 1, [...config.prefixes!, ...(config.delimiters ?? [])])
+    let d = findNextDelimiter(text, point + 1, delimiters)
+    
 
     // If its not reset then extend past formatting
     if (text[point + 1] !== 'r') {
@@ -175,20 +210,20 @@ function extract(text: string, config: Config): ExtractResult[] {
     }
 
     // If unknown color code skip
-    if (!Object.keys(colors).includes(text[point + 1])) {
+    if (!Object.keys(Colors).includes(text[point + 1])) {
       // If its not reset then extend last color
       if (text[point + 1] !== 'r') {
         extendLastColor(final, d)
       }
 
       // If not a color and format 
-      if (Object.keys(special).includes(text[point + 1])) {
+      if (Object.keys(Special).includes(text[point + 1])) {
 
         // Push special format to final array
         final.push({
           start: point,
           end: d,
-          color: special[text[point + 1] as keyof typeof special],
+          color: Special[text[point + 1] as keyof typeof Special],
         })
 
       }
@@ -197,7 +232,7 @@ function extract(text: string, config: Config): ExtractResult[] {
       continue
     } else {
       // Attempt to get color from above
-      const color = colors[text[point + 1] as keyof typeof colors]
+      const color = Colors[text[point + 1] as keyof typeof Colors]
       // If invalid color continue to next iteration
       if (!color) {
         continue
@@ -219,7 +254,7 @@ function extendLastColor(r: ExtractResult[], index: number): void {
   // Increment through the final array backwards
   for (let i = r.length - 1; i > -1; i--) {
     // Check if it is a special formatting
-    if (Object.values(special).includes(r[i].color)) {
+    if (SpecialValues.includes(r[i].color as SpecialUnion)) {
       // If reset break, we dont want to extend past formatting
       if (r[i].color === 'RESET') {
         break
@@ -237,7 +272,7 @@ function extendFormatting(r: ExtractResult[], index: number): void {
   // Increment through the final array backwards
   for (let i = r.length - 1; i > -1; i--) {
     // Check if it is a special formatting
-    if (Object.values(special).includes(r[i].color)) {
+    if (SpecialValues.includes(r[i].color as SpecialUnion)) {
       // If hit reset break, we dont want any formatting before that
       if (r[i].color === 'RESET') {
         break
@@ -264,7 +299,6 @@ function findNextDelimiter(text: string, index: number, delimiters: string[]): n
   // No next delimiter so return end of text
   return text.length
 }
-
 
 function indicesOf(text: string, match: string[]): number[] {
   const indices: number[] = []

@@ -32,7 +32,7 @@
 §aGreen§bBlue§cRed§dPurpur§eYellow§fWhite
 §gYellowish§r
 
-- Bolding/Italic -
+- Bolding/Italic/Underline/Strikethrough -
 
 §l§aGreen§bBlue§cRed§dPurpur§eYellow§fWhite
 §gYellowish§r
@@ -40,10 +40,13 @@
 §o§aGreen§bBlue§cRed§dPurpur§eYellow§fWhite
 §gYellowish§r
 
-§l§o§aGreen§bBlue§cRed§dPurpur§eYellow§fWhite
+§n§aGreen§bBlue§cRed§dPurpur§eYellow§fWhite
 §gYellowish§r
 
-§o§l§aGreen§bBlue§cRed§dPurpur§eYellow§fWhite
+§m§aGreen§bBlue§cRed§dPurpur§eYellow§fWhite
+§gYellowish§r
+
+§l§o§m§n§aGreen§bBlue§cRed§dPurpur§eYellow§fWhite
 §gYellowish§r
 
 --- Custom Prefix Support ---
@@ -98,3 +101,13 @@
 
 §o&l&aGree§n§bBlue&cRed§dP&urp&ur&eYello&w&fW§hite
 &gYellowi§sh&r
+
+
+--- Test Over Tokenization Fix ---
+§d§o Purple over tokenization
+this
+should
+not
+be
+colored
+

@@ -2,7 +2,7 @@
   "name": "mc-color",
   "displayName": "Minecraft Color Highlighter",
   "description": "Highlight Minecraft colors in your editor",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "publisher": "Nobuwu",
   "main": "./dist/extension.js",
   "icon": "public/logo.png",
@@ -51,6 +51,11 @@
           ],
           "description": "An array of characters that will be used to start tokenization. (§) is the default Minecraft symbol some server tools use (&) too.",
           "type": "array"
+        },
+        "mc-color.newLineDelimiter": {
+          "default": true,
+          "description": "If enabled this will stop tokenization at the start of a new line. Disabling this will result in the extension colorizing your entire file if you dont end your lines with §r.",
+          "type": "boolean"
         },
         "mc-color.delimiters": {
           "default": [

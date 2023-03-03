@@ -8,6 +8,7 @@ export interface Config extends vscode.WorkspaceConfiguration {
 	markerType?: MarkerType
 	prefixes?: string[]
 	delimiters?: string[]
+	newLineDelimiter?: boolean
 }
 
 let instanceMap: Highlight[] = []

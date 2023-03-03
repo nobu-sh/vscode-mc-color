@@ -1,6 +1,7 @@
 import * as vscode from 'vscode'
 import { Config } from './extension'
 import { getColorContrast } from './dynamicContraster'
+import { SpecialUnion, SpecialValues } from './Constants'
 
 // Not commenting this out, literally just takes a color and creates css for it.
 // Then stores it in a map so it only needs to create the css once.
@@ -18,13 +19,22 @@ export class DecorMap {
     if (!this._map.has(color)) {
       const rules: vscode.DecorationRenderOptions = {}
 
-      if (['BOLD', 'ITALIC', 'RESET'].includes(color)) {
-        switch(color as 'BOLD' | 'ITALIC' | 'RESET') {
+      if (SpecialValues.includes(color as SpecialUnion)) {
+        switch(color as SpecialUnion) {
           case 'BOLD':
             rules.fontWeight = '900'
             break
-            case 'ITALIC':
+          case 'ITALIC':
             rules.fontStyle = 'italic'
+            break
+          case 'UNDERLINE':
+            rules.textDecoration = 'underline'
+            break
+          case 'STRIKETHROUGH':
+            rules.textDecoration = 'line-through'
+            break
+          case 'HIDDEN_UNDERLINE_STRIKETHROUGH':
+            rules.textDecoration = 'underline line-through !important'
             break
         }
       } else {

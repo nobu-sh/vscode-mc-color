@@ -39,12 +39,27 @@ export class Highlight {
 
   public async updateRange(text: string, version: string): Promise<boolean | void> {
     try {
+      // Gets all color and format tokens in text
+      const tokens = extract(text, this.config)
+
+      if (!tokens.length) {
+        return false
+      }
+
+      // Iterates through the array backwards and extends the formatting to
+      // the nearest reset token
+      extendFormatting(tokens)
+
+      // Iterates through the array backwards and extends the color to
+      // the nearest next color or reset token
+      extendColors(tokens)
+
       // Create new extract results for every prefix
       // merges instances of underline and strikethrough into one hidden
       // style type because they both need to utilize the same css
       // variable
       const results = mergeTypes(
-        extract(text, this.config),
+        tokens,
         'HIDDEN_UNDERLINE_STRIKETHROUGH',
         'UNDERLINE',
         'STRIKETHROUGH'
@@ -188,11 +203,8 @@ function extract(text: string, config: Config): ExtractResult[] {
     return final
   }
 
-  // Create delimiters
-  const delimiters = [
-    ...(config.prefixes ?? []),
-    ...(config.delimiters ?? [])
-  ]
+  const prefixes = config.prefixes ?? []
+  const delimiters = config.delimiters ?? []
 
   if (config.newLineDelimiter) {
     delimiters.push('\n')
@@ -201,81 +213,76 @@ function extract(text: string, config: Config): ExtractResult[] {
   // For each indice of all §
   for (const point of points) {
     // Find the next delimiter. [§] and any defined in config count as delimiters.
-    let d = findNextDelimiter(text, point + 1, delimiters)
-    
+    let d = findNextDelimiter(text, point + 1, [...prefixes, ...delimiters])
 
-    // If its not reset then extend past formatting
-    if (text[point + 1] !== 'r') {
-      extendFormatting(final, d)
-    }
-
-    // If unknown color code skip
-    if (!Object.keys(Colors).includes(text[point + 1])) {
-      // If its not reset then extend last color
-      if (text[point + 1] !== 'r') {
-        extendLastColor(final, d)
-      }
-
-      // If not a color and format 
-      if (Object.keys(Special).includes(text[point + 1])) {
-
-        // Push special format to final array
-        final.push({
-          start: point,
-          end: d,
-          color: Special[text[point + 1] as keyof typeof Special],
-        })
-
-      }
-
-
-      continue
-    } else {
-      // Attempt to get color from above
+    // Sets the start and end for color and special formats
+    if (Object.keys(Colors).includes(text[point + 1])) {
       const color = Colors[text[point + 1] as keyof typeof Colors]
-      // If invalid color continue to next iteration
-      if (!color) {
-        continue
-      } else {
-        // If valid color push to final formatting array
+
+      if (color) {
         final.push({
           start: point,
           end: d,
           color,
         })
       }
+    } else if (Object.keys(Special).includes(text[point + 1])) {
+
+      // Push special format to final array
+      final.push({
+        start: point,
+        end: d,
+        color: Special[text[point + 1] as keyof typeof Special],
+      })
+
+    }
+
+    // If the delimiter is a stop point delimiter and not prefix we need to 
+    // push a reset token because delimiters act as alternative reset tokens
+    if (delimiters.includes(text[d])) {
+      final.push({
+        start: d,
+        end: d,
+        color: Special.r,
+      })
     }
   }
   
   return final
 }
 
-function extendLastColor(r: ExtractResult[], index: number): void {
+function extendColors(r: ExtractResult[]): void {
+  let index = r[r.length - 1].end
+
   // Increment through the final array backwards
   for (let i = r.length - 1; i > -1; i--) {
     // Check if it is a special formatting
     if (SpecialValues.includes(r[i].color as SpecialUnion)) {
       // If reset break, we dont want to extend past formatting
-      if (r[i].color === 'RESET') {
-        break
+      if (r[i].color === Special.r) {
+        index = r[i].start
+        continue
       }
       // Else continue
       continue
     } else {
       // Not special formatting but color so extend it then break
       r[i].end = index
-      break
+      index = r[i].start
+      continue
     }
   }
 } 
-function extendFormatting(r: ExtractResult[], index: number): void {
+function extendFormatting(r: ExtractResult[]): void {
+  let index = r[r.length - 1].end
   // Increment through the final array backwards
   for (let i = r.length - 1; i > -1; i--) {
     // Check if it is a special formatting
     if (SpecialValues.includes(r[i].color as SpecialUnion)) {
       // If hit reset break, we dont want any formatting before that
-      if (r[i].color === 'RESET') {
-        break
+      if (r[i].color === Special.r) {
+        index = r[i].start
+        continue
       }
       // Extend past formatting
       r[i].end = index

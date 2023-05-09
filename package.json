@@ -2,7 +2,7 @@
   "name": "mc-color",
   "displayName": "Minecraft Color Highlighter",
   "description": "Highlight Minecraft colors in your editor",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "publisher": "Nobuwu",
   "license": "MIT",
   "main": "./dist/extension.js",

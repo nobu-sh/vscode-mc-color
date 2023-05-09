@@ -4,7 +4,7 @@ import { Highlight } from './Highlight'
 export type MarkerType = 'foreground' | 'background' | 'outline' | 'underline'
 export interface Config extends vscode.WorkspaceConfiguration {
 	enabled?: boolean,
-	langauges?: string[],
+	languages?: string[],
 	markerType?: MarkerType
 	prefixes?: string[]
 	delimiters?: string[]
@@ -50,7 +50,7 @@ function isValidDocument(config: Config, { languageId }: vscode.TextDocument): b
 	}
 
 	// If config languages contains (*) then files clearly okay
-	if ((config?.langauges?.indexOf('*') ?? -1) > -1) {
+	if ((config?.languages?.indexOf('*') ?? -1) > -1) {
 		isValid = true
 	}
 

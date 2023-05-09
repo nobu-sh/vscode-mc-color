@@ -50,7 +50,7 @@ function isValidDocument(config: Config, { languageId }: vscode.TextDocument): b
 	}
 
 	// If config languages contains (*) then files clearly okay
-	if ((config?.langauges?.indexOf('*') ?? []) > -1) {
+	if ((config?.langauges?.indexOf('*') ?? -1) > -1) {
 		isValid = true
 	}
 

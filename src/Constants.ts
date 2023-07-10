@@ -17,6 +17,17 @@ export const Colors = {
   'e': '#ffff55',
   'f': '#ffffff',
   'g': '#ddd605',
+  'h': '#e4d5d2',
+  'i': '#cfcbcb',
+  'j': '#e4d5d2',
+  'k': '#443a3b',
+  'm': '#981607',
+  'n': '#b5684d',
+  'p': '#dfb22d',
+  'q': '#11a136',
+  's': '#2cbba9',
+  't': '#21497b',
+  'u': '#9b5cc7',
 } as const
 
 export const Special = {

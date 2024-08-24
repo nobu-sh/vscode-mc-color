@@ -2,8 +2,8 @@
 
 `mc-color` is an extension that will format Minecraft color escape characters (§) in the editor.
 
-![image](./public/bedrock.png)
-![image](./public/java.png)
+![image](https://raw.githubusercontent.com/nobu-sh/vscode-mc-color/yes/public/bedrock.png)
+![image](https://raw.githubusercontent.com/nobu-sh/vscode-mc-color/yes/public/java.png)
 
 ## Pre Version 2.0.0 Users
 

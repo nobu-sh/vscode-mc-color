@@ -1,26 +1,30 @@
 import * as vscode from 'vscode'
 import { Config } from './extension'
 import { getColorContrast } from './dynamicContraster'
-import { SpecialUnion, SpecialValues } from './Constants'
+import { Formats, MergedSpecialUnionWithHidden } from './Constants'
 
 // Not commenting this out, literally just takes a color and creates css for it.
 // Then stores it in a map so it only needs to create the css once.
 // Its like a formatting css cache.
 export class DecorMap {
   public config: Config
+  public format: Formats
   protected _map = new Map<string, vscode.TextEditorDecorationType>()
   protected _keys: string[] = []
 
-  constructor(config: Config) {
+  constructor(config: Config, format: Formats) {
     this.config = config
+    this.format = format
   }
 
   public get(color: string): vscode.TextEditorDecorationType {
+    const { values } = this.format
+
     if (!this._map.has(color)) {
       const rules: vscode.DecorationRenderOptions = {}
 
-      if (SpecialValues.includes(color as SpecialUnion)) {
-        switch(color as SpecialUnion) {
+      if (values.includes(color as MergedSpecialUnionWithHidden)) {
+        switch(color as MergedSpecialUnionWithHidden) {
           case 'BOLD':
             rules.fontWeight = '900'
             break
@@ -33,8 +37,12 @@ export class DecorMap {
           case 'STRIKETHROUGH':
             rules.textDecoration = 'line-through'
             break
-          case 'HIDDEN_UNDERLINE_STRIKETHROUGH':
+          case 'UNDERLINE_STRIKETHROUGH':
             rules.textDecoration = 'underline line-through !important'
+            break
+          case 'OBFUSCATED':
+            // TODO: Maybe a better way to represent this?
+            rules.opacity = '0.75'
             break
         }
       } else {

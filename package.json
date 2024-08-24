@@ -75,13 +75,27 @@
             "outline",
             "underline"
           ]
+        },
+        "mc-color.mode": {
+          "default": "bedrock",
+          "description": "Swaps between Java and Bedrock support since they are very different now. 'custom' will use the custom color map.",
+          "type": "string",
+          "enum": [
+            "bedrock",
+            "java"
+          ]
+        },
+        "mc-color.replicateJavaBug": {
+          "default": false,
+          "description": "Replicates a Java edition bug where text decoration formats don't carry over to the next prefix.",
+          "type": "boolean"
         }
       }
     },
     "commands": [
       {
         "command": "extension.mcColor",
-        "title": "MInecraft colors in current file"
+        "title": "Minecraft colors in current file"
       }
     ]
   },

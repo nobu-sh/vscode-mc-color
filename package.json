@@ -2,7 +2,7 @@
   "name": "mc-color",
   "displayName": "Minecraft Color Highlighter",
   "description": "Highlight Minecraft colors in your editor",
-  "version": "0.3.0",
+  "version": "2.0.0",
   "publisher": "Nobuwu",
   "license": "MIT",
   "main": "./dist/extension.js",
@@ -78,7 +78,7 @@
         },
         "mc-color.mode": {
           "default": "bedrock",
-          "description": "Swaps between Java and Bedrock support since they are very different now. 'custom' will use the custom color map.",
+          "description": "Swaps between Java and Bedrock support since they are very different now.",
           "type": "string",
           "enum": [
             "bedrock",
@@ -87,7 +87,7 @@
         },
         "mc-color.replicateJavaBug": {
           "default": false,
-          "description": "Replicates a Java edition bug where text decoration formats don't carry over to the next prefix.",
+          "description": "Replicates a Java edition bug where text decoration formats don't carry over to the next color prefix.",
           "type": "boolean"
         }
       }

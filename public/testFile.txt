@@ -1,87 +1,23 @@
---- Default Minecraft Support ---
+- Bedrock Example -
 
-- Colors -
+§aGreen§r §bBlue§r §cRed§r §dPurple§r §eYellow§r §fWhite§r
+§gMinecoin§r §hQuartz§r §iIron§r §jNetherite§r §mRedstone§r
+§nCopper§r §pGold§r §qEmerald§r §sDiamond§r §tLapis§r §uAmethyst§r
 
-§aGreen§r §bBlue§r §cRed§r §dPurpur§r §eYellow§r
-§fWhite§r §gYellowish§r
+§0Black§r §1Dark Blue§r §2Dark Green§r §3ADark Aqua§r §4Dark Red§r
+§5Dark Purple§r §6Gold§r §7Gray§r §8Dark Gray§r §9Blue§r
 
-§0Black§r §1Blue§r §2Green§r §3Aqua§r §4Red§r
-§5Purple§r §6Golden§r §7Greyish§r §8Grey§r §9Lavender§r
-
-§lBold§r §oItalic§r §nUnderline§r §mStrikethrough§r
+§lBold§r §oItalic§r §kObfuscated§r
 
 §Invalid
 
-- Continous Colors -
+- Java Example -
 
-§aGreen§bBlue§cRed§dPurpur§eYellow§fWhite
-§gYellowish§r
+§aGreen§r §bBlue§r §cRed§r §dPurpur§r §eYellow§r §fWhite§r
 
-- Bolding/Italic/Underline/Strikethrough -
+§0Black§r §1Dark Blue§r §2Dark Green§r §3ADark Aqua§r §4Dark Red§r
+§5Dark Purple§r §6Gold§r §7Gray§r §8Dark Gray§r §9Blue§r
 
-§l§aGreen§bBlue§cRed§dPurpur§eYellow§fWhite
-§gYellowish§r
+§lBold§r §oItalic§r §nUnderline§r §mStrikethrough§r §kObfuscated§r
 
-§o§aGreen§bBlue§cRed§dPurpur§eYellow§fWhite
-§gYellowish§r
-
-§l§o§aGreen§bBlue§cRed§dPurpur§eYellow§fWhite
-§gYellowish§r
-
-§n§aGreen§bBlue§cRed§dPurpur§eYellow§fWhite
-§gYellowish§r
-
-§m§aGreen§bBlue§cRed§dPurpur§eYellow§fWhite
-§gYellowish§r
-
-§l§o§m§n§aGreen§bBlue§cRed§dPurpur§eYellow§fWhite
-§gYellowish§r
-
-
---- Custom Prefix Support ---
-
-- Colors -
-
-&aGreen&r &bBlue&r &cRed&r &dPurpur&r &eYellow&r
-&fWhite&r &gYellowish&r
-
-&0Black&r &1Blue&r &2Green&r &3Aqua&r &4Red&r
-&5Purple&r &6Golden&r &7Greyish&r &8Grey&r &9Lavender&r
-
-&lBold&r &oItalic&r &nUnderline&r &mStrikethrough&r
-
-&Invalid
-
-- Continous Colors -
-
-&aGreen&bBlue&cRed&dPurpur&eYellow&fWhite
-&gYellowish&r
-
-- Bolding/Italic -
-
-&l&aGreen&bBlue&cRed&dPurpur&eYellow&fWhite
-&gYellowish&r
-
-&o&aGreen&bBlue&cRed&dPurpur&eYellow&fWhite
-&gYellowish&r
-
-&l&o&aGreen&bBlue&cRed&dPurpur&eYellow&fWhite
-&gYellowish&r
-
-&o&l&aGreen&bBlue&cRed&dPurpur&eYellow&fWhite
-&gYellowish&r
-
---- Mixed Prefixes ---
-
-§o&l&aGree§n§bBlue&cRed§dP&urp&ur&eYello&w&fW§hite
-&gYellowi§sh&r
-
-
---- Test Over Tokenization Fix ---
-§d§o Purple over tokenization
-this
-should
-not
-be
-colored
-
+§Invalid

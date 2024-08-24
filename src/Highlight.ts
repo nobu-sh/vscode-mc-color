@@ -273,6 +273,13 @@ export class Highlight {
         r[i].end = index
       } else {
         // If color continue we dont care
+
+        // Update we do care. Java has a bug where format resets at a the next color
+        // So if its a color we need to stop the formatting at the next color
+        if (this.config.replicateJavaBug) {
+          index = r[i].start
+        }
+
         continue
       }
     }

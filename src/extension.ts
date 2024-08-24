@@ -2,13 +2,17 @@ import * as vscode from 'vscode'
 import { Highlight } from './Highlight'
 
 export type MarkerType = 'foreground' | 'background' | 'outline' | 'underline'
+export type Mode = 'bedrock' | 'java'
+
 export interface Config extends vscode.WorkspaceConfiguration {
 	enabled?: boolean,
 	languages?: string[],
 	markerType?: MarkerType
 	prefixes?: string[]
 	delimiters?: string[]
-	newLineDelimiter?: boolean
+	newLineDelimiter?: boolean,
+	mode?: Mode,
+	replicateJavaBug?: boolean,
 }
 
 let instanceMap: Highlight[] = []

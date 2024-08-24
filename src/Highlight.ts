@@ -7,7 +7,13 @@ import {
 } from 'vscode'
 import { DecorMap } from './DecorMap'
 import { Config } from './extension'
-import { Colors, Special, SpecialUnion, SpecialValues } from './Constants'
+import { Formats, getFormats, MergedSpecialUnion, SpecialHiddenUnion } from './Constants'
+
+interface ExtractResult {
+  start: number
+  end: number
+  color: string
+}
 
 export class Highlight {
   public disposed = false
@@ -15,11 +21,13 @@ export class Highlight {
   public config: Config
   public decorations: DecorMap | null
   public listener: Disposable | null
+  public format: Formats
 
   public constructor(document: TextDocument, config: Config) {
     this.document = document
     this.config = config
-    this.decorations = new DecorMap(this.config)
+    this.format = getFormats(this.config.mode || 'bedrock')
+    this.decorations = new DecorMap(this.config, this.format)
     this.listener = workspace.onDidChangeTextDocument(({ document }) => this.onUpdate(document))
   }
 
@@ -40,7 +48,7 @@ export class Highlight {
   public async updateRange(text: string, version: string): Promise<boolean | void> {
     try {
       // Gets all color and format tokens in text
-      const tokens = extract(text, this.config)
+      const tokens = this.extract(text, this.config)
 
       if (!tokens.length) {
         return false
@@ -48,19 +56,19 @@ export class Highlight {
 
       // Iterates through the array backwards and extends the formatting to
       // the nearest reset token
-      extendFormatting(tokens)
+      this.extendFormatting(tokens)
 
       // Iterates through the array backwards and extends the color to
       // the nearest next color or reset token
-      extendColors(tokens)
+      this.extendColors(tokens)
 
       // Create new extract results for every prefix
       // merges instances of underline and strikethrough into one hidden
       // style type because they both need to utilize the same css
       // variable
-      const results = mergeTypes(
+      const results = this.mergeTypes(
         tokens,
-        'HIDDEN_UNDERLINE_STRIKETHROUGH',
+        'UNDERLINE_STRIKETHROUGH',
         'UNDERLINE',
         'STRIKETHROUGH'
       )
@@ -72,7 +80,7 @@ export class Highlight {
       }
 
       // Create ranges
-      const ranges = groupByColor(results)
+      const ranges = this.groupByColor(results)
 
       // If is disposed stop
       if (this.disposed) {
@@ -115,6 +123,189 @@ export class Highlight {
     }
   }
 
+  private mergeTypes(result: ExtractResult[], to: SpecialHiddenUnion, ...types: MergedSpecialUnion[]): ExtractResult[] {
+    // Groups all results by the ending index
+    const endIndexGroup = result.reduce((c: Record<number, ExtractResult[]>, i: ExtractResult) => {
+      if (!c[i.end]) {
+        c[i.end] = []
+      }
+
+      c[i.end].push(i)
+
+      return c
+    }, {})
+
+    Object.entries(endIndexGroup).forEach(([, v]) => {
+      // If less than two elements return
+      if (v.length < 2) {
+        return
+      }
+
+      // Grab the first occuring sample of each type
+      const samples = types.map((t) =>
+        v.filter((i) => i.color === t)
+          .sort((a, b) => a.start - b.start)[0]
+      ).filter((t) => t)
+
+      // If there are less samples then types return
+      if (samples.length < types.length) {
+        return
+      }
+
+      // Get the last occurring instance.
+      const start = samples.sort((a, b) => b.start - a.start)[0]
+
+      // Convert that instance to what we want.
+      start.color = to
+    })
+
+    // Gets all the values from grouped list and flattens into one array
+    return Object.values(endIndexGroup).flat()
+  }
+
+  private groupByColor(result: ExtractResult[]): Record<string, ExtractResult[]> {
+    return result.reduce((c: Record<string, ExtractResult[]>, i: ExtractResult) => {
+      if (!c[i.color]) {
+        c[i.color] = []
+      }
+  
+      c[i.color].push(i)
+  
+      return c
+    }, {})
+  }
+
+  private extract(text: string, config: Config): ExtractResult[] {
+    const { colors, special } = this.format
+    const final: ExtractResult[] = []
+  
+    // Get all occurances of §
+    const points = this.indicesOf(text, config.prefixes ?? [])
+    if (!points.length) {
+      return final
+    }
+  
+    const prefixes = config.prefixes ?? []
+    const delimiters = config.delimiters ?? []
+  
+    if (config.newLineDelimiter) {
+      delimiters.push('\n')
+    }
+  
+    // For each indice of all §
+    for (const point of points) {
+      // Find the next delimiter. [§] and any defined in config count as delimiters.
+      let d = this.findNextDelimiter(text, point + 1, [...prefixes, ...delimiters])
+  
+      // Sets the start and end for color and special formats
+      if (Object.keys(colors).includes(text[point + 1])) {
+        const color = colors[text[point + 1] as keyof typeof colors]
+  
+        if (color) {
+          final.push({
+            start: point,
+            end: d,
+            color,
+          })
+        }
+      } else if (Object.keys(special).includes(text[point + 1])) {
+  
+        // Push special format to final array
+        final.push({
+          start: point,
+          end: d,
+          color: special[text[point + 1] as keyof typeof special],
+        })
+  
+      }
+  
+      // If the delimiter is a stop point delimiter and not prefix we need to 
+      // push a reset token because delimiters act as alternative reset tokens
+      if (delimiters.includes(text[d])) {
+        final.push({
+          start: d,
+          end: d,
+          color: special.r,
+        })
+      }
+    }
+    
+    return final
+  }
+
+  private extendColors(r: ExtractResult[]): void {
+    const { special, values } = this.format
+    let index = r[r.length - 1].end
+  
+    // Increment through the final array backwards
+    for (let i = r.length - 1; i > -1; i--) {
+      // Check if it is a special formatting
+      if (values.includes(r[i].color as MergedSpecialUnion)) {
+        // If reset break, we dont want to extend past formatting
+        if (r[i].color === special.r) {
+          index = r[i].start
+          continue
+        }
+        // Else continue
+        continue
+      } else {
+        // Not special formatting but color so extend it then break
+        r[i].end = index
+        index = r[i].start
+        continue
+      }
+    }
+  }
+
+  private extendFormatting(r: ExtractResult[]): void {
+    const { special, values } = this.format
+    let index = r[r.length - 1].end
+    // Increment through the final array backwards
+    for (let i = r.length - 1; i > -1; i--) {
+      // Check if it is a special formatting
+      if (values.includes(r[i].color as MergedSpecialUnion)) {
+        // If hit reset break, we dont want any formatting before that
+        if (r[i].color === special.r) {
+          index = r[i].start
+          continue
+        }
+        // Extend past formatting
+        r[i].end = index
+      } else {
+        // If color continue we dont care
+        continue
+      }
+    }
+  }
+
+  private findNextDelimiter(text: string, index: number, delimiters: string[]): number {
+    // Increment through the text at given position
+    for (let i = index; i < text.length; i++) {
+      // Once delimiter is found
+      if (delimiters.includes(text[i])) {
+        // Return its index
+        return i
+      }
+    }
+  
+    // No next delimiter so return end of text
+    return text.length
+  }
+
+  private indicesOf(text: string, match: string[]): number[] {
+    const indices: number[] = []
+    // Increment through every character in the text
+    for (let i = 0; i < text.length; i++) {
+      // If text is equal to match
+      if (match.includes(text[i])) {
+        // push the indice
+        indices.push(i)
+      }
+    }
+  
+    return indices
+  }
+
   /**
    * Dispose current highlighter
    */
@@ -129,194 +320,4 @@ export class Highlight {
       this.listener = null
     }
   }
-}
-
-interface ExtractResult {
-  start: number
-  end: number
-  color: string
-}
-
-// This method is a bit messy but tbh I don't really care, it works
-function mergeTypes(result: ExtractResult[], to: SpecialUnion, ...types: SpecialUnion[]): ExtractResult[] {
-  // Groups all results by the ending index
-  const endIndexGroup = result.reduce((c: Record<number, ExtractResult[]>, i: ExtractResult) => {
-    if (!c[i.end]) {
-      c[i.end] = []
-    }
-
-    c[i.end].push(i)
-
-    return c
-  }, {})
-
-  Object.entries(endIndexGroup).forEach(([i, v]) => {
-    // If less than two elements return
-    if (v.length < 2) {
-      return
-    }
-
-    // Grab the first occuring sample of each type
-    const samples = types.map((t) =>
-      v.filter((i) => i.color === t)
-        .sort((a, b) => a.start - b.start)[0]
-    ).filter((t) => t)
-
-    // If there are less samples then types return
-    if (samples.length < types.length) {
-      return
-    }
-
-    // Get the last occurring instance.
-    const start = samples.sort((a, b) => b.start - a.start)[0]
-
-    // Convert that instance to what we want.
-    start.color = to
-  })
-
-  // Gets all the values from grouped list and flattens into one array
-  return Object.values(endIndexGroup).flat()
-}
-
-// Converts array of extract results into object formatted like so:
-// {
-//   "hex_color": ExtractResult[]
-// }
-function groupByColor(result: ExtractResult[]): Record<string, ExtractResult[]> {
-  return result.reduce((c: Record<string, ExtractResult[]>, i: ExtractResult) => {
-    if (!c[i.color]) {
-      c[i.color] = []
-    }
-
-    c[i.color].push(i)
-
-    return c
-  }, {})
-}
-
-function extract(text: string, config: Config): ExtractResult[] {
-  const final: ExtractResult[] = []
-  
-  // Get all occurances of §
-  const points = indicesOf(text, config.prefixes ?? [])
-  if (!points.length) {
-    return final
-  }
-
-  const prefixes = config.prefixes ?? []
-  const delimiters = config.delimiters ?? []
-
-  if (config.newLineDelimiter) {
-    delimiters.push('\n')
-  }
-
-  // For each indice of all §
-  for (const point of points) {
-    // Find the next delimiter. [§] and any defined in config count as delimiters.
-    let d = findNextDelimiter(text, point + 1, [...prefixes, ...delimiters])
-
-    // Sets the start and end for color and special formats
-    if (Object.keys(Colors).includes(text[point + 1])) {
-      const color = Colors[text[point + 1] as keyof typeof Colors]
-
-      if (color) {
-        final.push({
-          start: point,
-          end: d,
-          color,
-        })
-      }
-    } else if (Object.keys(Special).includes(text[point + 1])) {
-
-      // Push special format to final array
-      final.push({
-        start: point,
-        end: d,
-        color: Special[text[point + 1] as keyof typeof Special],
-      })
-
-    }
-
-    // If the delimiter is a stop point delimiter and not prefix we need to 
-    // push a reset token because delimiters act as alternative reset tokens
-    if (delimiters.includes(text[d])) {
-      final.push({
-        start: d,
-        end: d,
-        color: Special.r,
-      })
-    }
-  }
-  
-  return final
-}
-
-function extendColors(r: ExtractResult[]): void {
-  let index = r[r.length - 1].end
-
-  // Increment through the final array backwards
-  for (let i = r.length - 1; i > -1; i--) {
-    // Check if it is a special formatting
-    if (SpecialValues.includes(r[i].color as SpecialUnion)) {
-      // If reset break, we dont want to extend past formatting
-      if (r[i].color === Special.r) {
-        index = r[i].start
-        continue
-      }
-      // Else continue
-      continue
-    } else {
-      // Not special formatting but color so extend it then break
-      r[i].end = index
-      index = r[i].start
-      continue
-    }
-  }
-} 
-function extendFormatting(r: ExtractResult[]): void {
-  let index = r[r.length - 1].end
-  // Increment through the final array backwards
-  for (let i = r.length - 1; i > -1; i--) {
-    // Check if it is a special formatting
-    if (SpecialValues.includes(r[i].color as SpecialUnion)) {
-      // If hit reset break, we dont want any formatting before that
-      if (r[i].color === Special.r) {
-        index = r[i].start
-        continue
-      }
-      // Extend past formatting
-      r[i].end = index
-    } else {
-      // If color continue we dont care
-      continue
-    }
-  }
-} 
-
-function findNextDelimiter(text: string, index: number, delimiters: string[]): number {
-  // Increment through the text at given position
-  for (let i = index; i < text.length; i++) {
-    // Once delimiter is found
-    if (delimiters.includes(text[i])) {
-      // Return its index
-      return i
-    }
-  }
-
-  // No next delimiter so return end of text
-  return text.length
-}
-
-function indicesOf(text: string, match: string[]): number[] {
-  const indices: number[] = []
-  // Increment through every character in the text
-  for (let i = 0; i < text.length; i++) {
-    // If text is equal to match
-    if (match.includes(text[i])) {
-      // push the indice
-      indices.push(i)
-    }
-  }
-
-  return indices
 }

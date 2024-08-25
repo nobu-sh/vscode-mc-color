@@ -2,10 +2,11 @@
   "name": "mc-color",
   "displayName": "Minecraft Color Highlighter",
   "description": "Highlight Minecraft colors in your editor",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "publisher": "Nobuwu",
   "license": "MIT",
   "main": "./dist/extension.js",
+  "browser": "./dist/extension.js",
   "icon": "public/logo.png",
   "bugs": {
     "url": "https://github.com/nobu-sh/vscode-mc-color/issues"
@@ -22,7 +23,8 @@
     "Other"
   ],
   "activationEvents": [
-    "*"
+    "*",
+    "onCommand:helloworld-web-sample.helloWorld"
   ],
   "capabilities": {
     "untrustedWorkspaces": {

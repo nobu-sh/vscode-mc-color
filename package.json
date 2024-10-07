@@ -23,7 +23,6 @@
     "url": "https://github.com/nobu-sh/vscode-mc-color.git"
   },
   "activationEvents": [
-    "onLanguage:*",
     "onStartupFinished"
   ],
   "capabilities": {

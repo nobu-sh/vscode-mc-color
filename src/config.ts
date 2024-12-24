@@ -1,22 +1,19 @@
 import * as vscode from "vscode";
 
-export type ConfigVersion = "bedrock" | "bedrock-pre-1.19.70" | "java";
-export const ConfigVersions: Array<ConfigVersion> = [
+export const ConfigVersions = [
   "bedrock",
+  "bedrock-pre-1.21.50",
   "bedrock-pre-1.19.70",
   "java"
 ] as const;
-export type ConfigMarker =
-  | "foreground"
-  | "background"
-  | "outline"
-  | "underline";
-export const ConfigMarkers: Array<ConfigMarker> = [
+export type ConfigVersion = (typeof ConfigVersions)[number];
+export const ConfigMarkers = [
   "foreground",
   "background",
   "outline",
   "underline"
 ] as const;
+export type ConfigMarker = (typeof ConfigMarkers)[number];
 
 export interface Config {
   enable: boolean;

@@ -3,7 +3,7 @@
   "displayName": "Minecraft Color Highlighter",
   "description": "Highlight Minecraft colors in your editor 🔥",
   "publisher": "Nobuwu",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "license": "MIT",
   "engines": {
     "vscode": "^1.94.0"
@@ -54,6 +54,7 @@
           "description": "Minecraft version to use for color codes.",
           "enum": [
             "bedrock",
+            "bedrock-pre-1.21.50",
             "bedrock-pre-1.19.70",
             "java"
           ]

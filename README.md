@@ -13,7 +13,7 @@ The current beta experiments with custom language tokenization for improved edit
 interface Config {
   "mc-color.enable": boolean;
   "mc-color.prefixes": Array<string>;
-  "mc-color.version": "bedrock" | "bedrock-pre-1.19.70" | "java";
+  "mc-color.version": "bedrock" | "bedrock-pre-1.21.50" | "bedrock-pre-1.19.70" | "java";
   "mc-color.marker": "foreground" | "background" | "outline" | "underline";
   "mc-color.fallback": boolean;
   "mc-color.fallbackRegex": Array<string>;

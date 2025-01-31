@@ -37,16 +37,12 @@ export class Tokenizer {
     start: string
   ): Array<Definition & { directMatch?: true }> {
     return this.grammar.definitions
-      .filter((definition) => {
-        return definition.start.startsWith(start);
-      })
-      .map((definition) => {
-        if (definition.start === start) {
-          return { ...definition, directMatch: true };
-        }
-
-        return definition;
-      });
+      .filter((definition) => definition.start.startsWith(start))
+      .map((definition) =>
+        definition.start === start
+          ? { ...definition, directMatch: true }
+          : definition
+      );
   }
 
   public tokenize(content?: string): Array<Token> {
@@ -57,46 +53,61 @@ export class Tokenizer {
 
   private _tokenize(): Array<Token> {
     const tokens: Array<Token> = [];
-
     while (!this.finished) {
       const token = this._tokenizeSingle();
-      if (token) {
-        tokens.push(token);
-      }
+      if (token) tokens.push(token);
     }
-
     return tokens;
   }
 
   private _tokenizeSingle(): Token | null {
     const start = this.index;
-    const char = this.consume();
+    const char = this.consume(); // always consume at least one
     let matches = this.searchDefinitions(char);
 
+    // If no definition matches even the first char, bail
     if (matches.length === 0) {
-      return null; // No valid match found, continue tokenizing
+      return null;
     }
 
     let match: Definition | null = null;
     let consumed = char;
 
+    // Determine how far we should attempt partial matching
+    // (avoid scanning beyond the largest start length)
+    const maxLen = Math.max(
+      ...this.grammar.definitions.map((d) => d.start.length)
+    );
+
     while (matches.length > 1 && !this.finished) {
+      // If we already found an exact match, we could break, but we'll
+      // keep going to allow a longer directMatch if it exists.
       const exactMatch = matches.find((def) => def.directMatch);
       if (exactMatch) {
         match = exactMatch;
+      }
+
+      // If we've already consumed as many chars as the max start,
+      // no point in going further; it won't become direct
+      if (consumed.length >= maxLen) {
+        break;
       }
 
       consumed += this.consume();
       matches = this.searchDefinitions(consumed);
     }
 
+    // If no direct match is confirmed, check if the single leftover is direct
     if (!match && matches[0]?.directMatch) {
       match = matches[0];
-    } else {
-      return null; // No match found, continue tokenizing
     }
 
-    // Now handle the token, and check if it has a scope
+    if (!match) {
+      // No definitive match
+      return null;
+    }
+
+    // Otherwise create the token
     return this._createToken(match, start);
   }
 
@@ -104,33 +115,29 @@ export class Tokenizer {
     const innerStart = this.index;
     const endSequence = match.end;
     const isMultiline = match.multiline;
-    const escapeCharacter = match.escape; // Escape character can be undefined
-
-    const tokens: Array<Token> = []; // Initialize child tokens
+    const escapeCharacter = match.escape;
+    const tokens: Array<Token> = [];
 
     while (!this.finished) {
       const nextChar = this.peek();
 
-      // Only handle escape if an escape character is defined
+      // Handle escapes
       if (escapeCharacter && nextChar === escapeCharacter) {
-        this.consume(); // Consume the escape character
-        this.consume(); // Consume the escaped character
+        this.consume(); // escape char
+        if (!this.finished) this.consume(); // escaped char
         continue;
       }
 
-      // Handle scope if it exists
+      // If there's a nested scope
       if (
         match.scope &&
         this.peek(match.scope.start.length) === match.scope.start
       ) {
-        const scopeStart = this.index; // Track start of the scope
-        this.consume(match.scope.start.length); // Consume the scope start characters
+        const scopeStart = this.index;
+        this.consume(match.scope.start.length);
 
-        // Tokenize the content inside the scope
         const scopeTokens = this._tokenizeScope(match.scope);
-        const scopeEnd = this.index; // Track the end of the scope
-
-        // Push the scope token with correct start/end positions
+        const scopeEnd = this.index;
         tokens.push({
           type: match.scope.type,
           start: scopeStart,
@@ -139,17 +146,16 @@ export class Tokenizer {
           innerEnd: scopeEnd - match.scope.end.length,
           tokens: scopeTokens
         });
-
-        continue; // Continue after handling the scope
+        continue;
       }
 
-      // If we're not in an escaped state, check for the end sequence
+      // Check for end
       if (this.peek(endSequence.length) === endSequence) {
         this.consume(endSequence.length);
         break;
       }
 
-      // If it's not a multiline definition, break on newlines
+      // If single‐line, break on newline
       if (!isMultiline && nextChar === "\n") {
         this.consume();
         break;
@@ -167,7 +173,7 @@ export class Tokenizer {
       end,
       innerStart,
       innerEnd,
-      tokens // Return the child tokens including the nested scopes
+      tokens
     };
   }
 
@@ -177,20 +183,17 @@ export class Tokenizer {
     while (!this.finished) {
       const char = this.peek();
 
-      // Handle escape characters inside the scope
       if (scope.escape && char === scope.escape) {
-        this.consume(); // Consume escape
-        this.consume(); // Consume escaped character
+        this.consume();
+        if (!this.finished) this.consume();
         continue;
       }
 
-      // If we find the scope's end, exit
       if (this.peek(scope.end.length) === scope.end) {
         this.consume(scope.end.length);
         break;
       }
 
-      // Recursively tokenize the content inside the scope
       const token = this._tokenizeSingle();
       if (token) {
         tokens.push(token);
@@ -212,18 +215,17 @@ export function fallbackTokenizer(
     let matchIndex = content.length;
     let matchedLength = 0;
 
-    // Find the next matching regex pattern
+    // Find next matching regex
     for (const regex of regexs) {
-      regex.lastIndex = currentIndex; // Start matching from current position
+      regex.lastIndex = currentIndex;
       const match = regex.exec(content);
-
       if (match && match.index >= currentIndex && match.index < matchIndex) {
         matchIndex = match.index;
         matchedLength = match[0].length;
       }
     }
 
-    // Add token for the content before the matched regex (delimiter)
+    // Everything before the delimiter is one token
     if (currentIndex < matchIndex) {
       tokens.push({
         type: "fallback",
@@ -235,7 +237,7 @@ export function fallbackTokenizer(
       });
     }
 
-    // Move past the delimiter, no token is created for the delimiter itself
+    // Skip the delimiter itself
     currentIndex = matchIndex + matchedLength;
   }
 

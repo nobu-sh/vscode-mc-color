@@ -3,7 +3,7 @@
   "displayName": "Minecraft Color Highlighter",
   "description": "Highlight Minecraft colors in your editor 🔥",
   "publisher": "Nobuwu",
-  "version": "3.1.1",
+  "version": "3.1.2",
   "license": "MIT",
   "engines": {
     "vscode": "^1.94.0"
